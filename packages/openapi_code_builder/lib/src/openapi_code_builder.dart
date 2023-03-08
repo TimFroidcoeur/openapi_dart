@@ -28,6 +28,7 @@ class OpenApiLibraryGenerator {
     this.generateProvider = false,
     this.providerNamePrefix = '',
     this.ignoreSecuritySchemes = false,
+    this.extraImports = const <String>[],
   });
 
   final APIDocument api;
@@ -130,6 +131,7 @@ class OpenApiLibraryGenerator {
   final lb = LibraryBuilder();
   final securitySchemesClass = ClassBuilder()..name = 'SecuritySchemes';
   final List<Expression?> routerConfig = <Expression>[];
+  final List<String> extraImports;
 
   Library generate() {
     lb.body.add(Directive.part(partFileName));
@@ -1447,10 +1449,14 @@ class OpenApiCodeBuilderUtils {
     return api;
   }
 
-  static String formatLibrary(Library library,
-      {bool orderDirectives = false, required bool useNullSafetySyntax}) {
+  static String formatLibrary(
+    Library library, {
+    bool orderDirectives = false,
+    required bool useNullSafetySyntax,
+    List<String> doNotPrefix = const <String>[],
+  }) {
     final emitter = DartEmitter(
-      allocator: CustomAllocator(),
+      allocator: CustomAllocator(doNotPrefix: doNotPrefix),
       orderDirectives: orderDirectives,
       useNullSafetySyntax: useNullSafetySyntax,
     );
@@ -1494,6 +1500,12 @@ class OpenApiCodeBuilder extends Builder {
 
     final baseName = api.info!.extensions['x-dart-name'] as String? ??
         inputIdBasename.pascalCase;
+    final extraImports =
+        ((api.info!.extensions['x-dart-extra-imports'] as ListArchive?) ??
+                ListArchive())
+            .toList()
+            .map((dynamic item) => item.toString())
+            .toList();
 
     final l = OpenApiLibraryGenerator(
       api,
@@ -1505,12 +1517,14 @@ class OpenApiCodeBuilder extends Builder {
       generateProvider: generateProvider,
       providerNamePrefix: providerNamePrefix,
       ignoreSecuritySchemes: ignoreSecuritySchemes,
+      extraImports: extraImports,
     ).generate();
 
     final libraryOutput = OpenApiCodeBuilderUtils.formatLibrary(
       l,
       orderDirectives: true,
       useNullSafetySyntax: useNullSafetySyntax,
+      doNotPrefix: extraImports,
     );
 //    print(DartFormatter().format('${l.accept(emitter)}'));
 //    print('inputId: $inputId / outputId: $outputId');
