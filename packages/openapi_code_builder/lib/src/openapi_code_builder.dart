@@ -1314,6 +1314,9 @@ class OpenApiLibraryGenerator {
         }
         return _typeString;
       case APIType.number:
+        if (schema.format == 'double') {
+          return refer('double');
+        }
         return refer('num');
       case APIType.integer:
         return refer('int');
