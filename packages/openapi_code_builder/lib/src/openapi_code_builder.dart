@@ -1105,6 +1105,12 @@ class OpenApiLibraryGenerator {
             ..addDartDoc(e.description)
             ..annotations.add(jsonKey([], {
               'name': literalString(key),
+              if (e.extensions.containsKey('x-dart-tojson')) ...{
+                'toJson': refer(e.extensions['x-dart-tojson'] as String),
+              },
+              if (e.extensions.containsKey('x-dart-fromjson')) ...{
+                'fromJson': refer(e.extensions['x-dart-fromjson'] as String),
+              },
               if (!(e.isNullable ?? false)) ...{
                 'includeIfNull': literalFalse,
               }
