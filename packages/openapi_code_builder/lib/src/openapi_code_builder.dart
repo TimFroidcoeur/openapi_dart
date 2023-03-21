@@ -1103,6 +1103,9 @@ class OpenApiLibraryGenerator {
   }
 
   Reference _toDartType(String parent, APISchemaObject schema) {
+    if (schema.extensions.containsKey('x-dart-type')) {
+      return refer(schema.extensions['x-dart-type'] as String);
+    }
     switch (schema.type ?? APIType.object) {
       case APIType.string:
         if (schema.enumerated != null && schema.enumerated!.isNotEmpty) {
