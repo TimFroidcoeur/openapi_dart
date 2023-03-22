@@ -1352,14 +1352,34 @@ extension on Reference {
 }
 
 extension on ListBuilder<String> {
-  /// adds the given helpText as `docs` if it is not null.
+  /// adds the given helpText as single line `docs` if it is not null.
+  void addDartDocSingleLine(String helpText, String? prefix) {
+    if (prefix == null) {
+      add('/// $helpText');
+    } else {
+      add('/// $prefix $helpText');
+    }
+  }
+
+  void addDartDocMultiLine(String helpText, String? prefix) {
+    add('/**');
+    if (prefix == null) {
+      add(helpText);
+    } else {
+      add(' $prefix $helpText');
+    }
+    add('*/');
+  }
+
   void addDartDoc(String? helpText, {String? prefix}) {
-    if (helpText != null) {
-      if (prefix == null) {
-        add('/// $helpText');
-      } else {
-        add('/// $prefix $helpText');
-      }
+    if (helpText == null) {
+      return;
+    }
+    final txt = helpText.trimRight();
+    if (!txt.contains('\n')) {
+      addDartDocSingleLine(txt, prefix);
+    } else {
+      addDartDocMultiLine(txt, prefix);
     }
   }
 }
