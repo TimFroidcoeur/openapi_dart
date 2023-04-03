@@ -885,6 +885,9 @@ class OpenApiLibraryGenerator {
 
     final reference = createdSchema.putIfAbsent(schemaObject, () {
       _logger.finer('Creating schema class. for ${schemaObject.referenceURI} / $key / ${schemaObject.extensions}');
+      if (schemaObject.extensions.containsKey('x-dart-ignore')) {
+        return refer(key);
+      }
       if (schemaObject.extensions.containsKey('x-dart-type')) {
         final e = TypeDef((b) => b
           ..name = key
