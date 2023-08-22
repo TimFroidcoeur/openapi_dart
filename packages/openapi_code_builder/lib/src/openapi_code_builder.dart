@@ -5,7 +5,7 @@ import 'package:build/build.dart';
 import 'package:built_collection/built_collection.dart';
 import 'package:code_builder/code_builder.dart';
 import 'package:code_builder/src/visitors.dart'; // ignore: implementation_imports
-import 'package:collection/collection.dart' show IterableExtension;
+import 'package:collection/collection.dart' show IterableExtension, IterableZip;
 import 'package:dart_style/dart_style.dart';
 import 'package:logging/logging.dart';
 import 'package:open_api_forked/v3.dart';
@@ -896,7 +896,8 @@ class OpenApiLibraryGenerator {
         return refer(key);
       }
       if (schemaObject.enumerated?.isNotEmpty == true) {
-        final e = _createEnum(componentName, schemaObject.enumerated!);
+        final xnames = (schemaObject.extensions['x-enum-varnames'] as ListArchive?);
+        final e = _createEnum( componentName, schemaObject.enumerated!,xnames?.toPrimitive());
         return e;
       }
       final c = _createSchemaClass(componentName, schemaObject);
@@ -1093,17 +1094,24 @@ class OpenApiLibraryGenerator {
     return c;
   }
 
-  Reference _createEnum(String name, List<dynamic>? values) {
+  Reference _createEnum(String name, List<dynamic>? values, List<dynamic>? names) {
+    names ??= <String>[];
+    // override those default names with the provided ones
+    if (values!.length > names.length) {
+      List<String> enumVarNames = values.map((dynamic e) => e.toString()).toList().sublist(names.length);
+      names = names + enumVarNames;
+    }
+
     return createdEnums.putIfAbsent(name, () {
       lb.body.add(EnumSpec(
         name: name,
-        values: values!
+        values: IterableZip<dynamic>([values, names!])
             .map(
               (dynamic e) => EnumValueSpec(
                 annotations: [
-                  jsonValue([literalString(e.toString())])
+                  jsonValue([literalString(e[0].toString())])
                 ],
-                name: e.toString(),
+                name: e[1].toString(),
               ),
             )
             .toList(),
